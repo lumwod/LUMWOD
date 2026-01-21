@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .user-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .back-btn, .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .back-btn:hover, .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .access-denied h1 {
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+
+        .back-link {
+            background-color: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            width: 300px;
+            font-size: 14px;
+        }
+
+        .search-bar button {
+            background-color: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-bar button:hover {
+            background-color: #5568d3;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background-color: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-btn {
+            background-color: #27ae60;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .action-btn:hover {
+            background-color: #229954;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            margin-left: 5px;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="tel"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+
+        .save-btn {
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .save-btn:hover {
+            background-color: #229954;
+        }
+
+        .cancel-btn {
+            background-color: #95a5a6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .cancel-btn:hover {
+            background-color: #7f8c8d;
+        }
+
+        .read-only {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 User Management</h1>
+            <div class="user-controls">
+                <a href="admin.html" class="back-btn">← Back to Admin</a>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="content" id="mainContent">
+            <div id="accessDenied" class="access-denied" style="display: none;">
+                <h1>Access Denied</h1>
+                <p>You do not have permission to access this page. Only administrators can manage users.</p>
+                <a href="index.html" class="back-link">Go Back to Home</a>
+            </div>
+
+            <div id="userPanel" style="display: none;">
+                <div id="message" class="message"></div>
+
+                <div class="user-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalShares">0</div>
+                        <div class="stat-label">Total Shares</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalLoans">0</div>
+                        <div class="stat-label">Total Loans</div>
+                    </div>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search by name, phone, or ID number...">
+                    <button onclick="searchUsers()">Search</button>
+                    <button onclick="resetSearch()" style="background-color: #95a5a6;">Reset</button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Phone Number</th>
+                                <th>ID Number</th>
+                                <th>Shares (KSH)</th>
+                                <th>Loans (KSH)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="noData" class="no-data" style="display: none;">
+                    <p>No users found. Start by adding the first user.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Edit User Information</div>
+            
+            <div class="form-group">
+                <label>Full Name (Read-only)</label>
+                <input type="text" id="editFullName" readonly class="read-only">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone Number (10 digits)</label>
+                    <input type="tel" id="editPhone" placeholder="e.g., 0712345678" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label>ID Number</label>
+                    <input type="text" id="editIDNumber" placeholder="e.g., 12345678">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Shares (KSH)</label>
+                    <input type="number" id="editShares" placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Loans (KSH)</label>
+                    <input type="number" id="editLoans" placeholder="0" min="0">
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+                <button class="save-btn" onclick="saveUserChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample user database (in production, this would come from a server)
+        let users = [
+            {
+                id: 1,
+                fullName: "John Kipchoge",
+                phone: "0712345678",
+                idNumber: "12345678",
+                shares: 5000,
+                loans: 15000
+            },
+            {
+                id: 2,
+                fullName: "Mary Wanjiru",
+                phone: "0723456789",
+                idNumber: "87654321",
+                shares: 8000,
+                loans: 20000
+            },
+            {
+                id: 3,
+                fullName: "David Mutua",
+                phone: "0734567890",
+                idNumber: "45678901",
+                shares: 3500,
+                loans: 10000
+            },
+            {
+                id: 4,
+                fullName: "Grace Ochieng",
+                phone: "0745678901",
+                idNumber: "23456789",
+                shares: 6200,
+                loans: 18000
+            }
+        ];
+
+        let currentEditingUser = null;
+        let filteredUsers = [...users];
+
+        // Check if user is logged in and is admin
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const role = sessionStorage.getItem('role');
+
+            if (role !== 'admin') {
+                document.getElementById('accessDenied').style.display = 'block';
+                document.getElementById('userPanel').style.display = 'none';
+            } else {
+                document.getElementById('accessDenied').style.display = 'none';
+                document.getElementById('userPanel').style.display = 'block';
+                loadUsers();
+            }
+        });
+
+        function loadUsers() {
+            // Load users from localStorage if available
+            const savedUsers = localStorage.getItem('lumwodUsers');
+            if (savedUsers) {
+                try {
+                    users = JSON.parse(savedUsers);
+                } catch (e) {
+                    console.log('Using default users');
+                }
+            } else {
+                // Save default users to localStorage
+                localStorage.setItem('lumwodUsers', JSON.stringify(users));
+            }
+
+            filteredUsers = [...users];
+            displayUsers();
+            updateStats();
+        }
+
+        function displayUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            const noData = document.getElementById('noData');
+
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = '';
+                noData.style.display = 'block';
+                return;
+            }
+
+            noData.style.display = 'none';
+            tbody.innerHTML = filteredUsers.map(user => `
+                <tr>
+                    <td>${user.fullName}</td>
+                    <td>${user.phone}</td>
+                    <td>${user.idNumber}</td>
+                    <td>KSH ${formatNumber(user.shares)}</td>
+                    <td>KSH ${formatNumber(user.loans)}</td>
+                    <td>
+                        <button class="action-btn" onclick="openEditModal(${user.id})">Edit</button>
+                        <button class="action-btn delete-btn" onclick="deleteUser(${user.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openEditModal(userId) {
+            currentEditingUser = users.find(u => u.id === userId);
+            if (!currentEditingUser) return;
+
+            document.getElementById('editFullName').value = currentEditingUser.fullName;
+            document.getElementById('editPhone').value = currentEditingUser.phone;
+            document.getElementById('editIDNumber').value = currentEditingUser.idNumber;
+            document.getElementById('editShares').value = currentEditingUser.shares;
+            document.getElementById('editLoans').value = currentEditingUser.loans;
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentEditingUser = null;
+        }
+
+        function saveUserChanges() {
+            if (!currentEditingUser) return;
+
+            const phone = document.getElementById('editPhone').value.trim();
+            const idNumber = document.getElementById('editIDNumber').value.trim();
+            const shares = parseInt(document.getElementById('editShares').value) || 0;
+            const loans = parseInt(document.getElementById('editLoans').value) || 0;
+
+            // Validate phone number
+            if (!/^\d{10}$/.test(phone)) {
+                showMessage('Phone number must be exactly 10 digits', 'error');
+                return;
+            }
+
+            // Validate ID number
+            if (!/^\d+$/.test(idNumber)) {
+                showMessage('ID number must contain only digits', 'error');
+                return;
+            }
+
+            // Update user
+            currentEditingUser.phone = phone;
+            currentEditingUser.idNumber = idNumber;
+            currentEditingUser.shares = shares;
+            currentEditingUser.loans = loans;
+
+            // Save to localStorage
+            localStorage.setItem('lumwodUsers', JSON.stringify(users));
+
+            showMessage('User information updated successfully!', 'success');
+            closeModal();
+            displayUsers();
+            updateStats();
+        }
+
+        function deleteUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            if (confirm(`Are you sure you want to delete ${user.fullName}?`)) {
+                users = users.filter(u => u.id !== userId);
+                localStorage.setItem('lumwodUsers', JSON.stringify(users));
+                showMessage('User deleted successfully!', 'success');
+                filteredUsers = [...users];
+                displayUsers();
+                updateStats();
+            }
+        }
+
+        function searchUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            if (!searchTerm) {
+                filteredUsers = [...users];
+                displayUsers();
+                return;
+            }
+
+            filteredUsers = users.filter(user => 
+                user.fullName.toLowerCase().includes(searchTerm) ||
+                user.phone.includes(searchTerm) ||
+                user.idNumber.includes(searchTerm)
+            );
+
+            displayUsers();
+        }
+
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            filteredUsers = [...users];
+            displayUsers();
+        }
+
+        function updateStats() {
+            document.getElementById('totalUsers').textContent = users.length;
+            const totalShares = users.reduce((sum, user) => sum + user.shares, 0);
+            const totalLoans = users.reduce((sum, user) => sum + user.loans, 0);
+            document.getElementById('totalShares').textContent = 'KSH ' + formatNumber(totalShares);
+            document.getElementById('totalLoans').textContent = 'KSH ' + formatNumber(totalLoans);
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 4000);
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-US').format(num);
+        }
+
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('role');
+            sessionStorage.removeItem('loginTime');
+            window.location.href = 'login.html';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Real-time validation for phone number
+        document.addEventListener('DOMContentLoaded', () => {
+            const phoneInput = document.getElementById('editPhone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                });
+            }
+
+            const idInput = document.getElementById('editIDNumber');
+            if (idInput) {
+                idInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
